@@ -38,6 +38,8 @@ canvas { background:white; padding:16px; border-radius:12px; }
 </div>
 </div>
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+
 const labels = ["Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23","Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"];
 
 const data = {
@@ -100,17 +102,19 @@ chart.update();
 updateMetrics(f);
 }
 
-function setPlatform(p){
+window.setPlatform = function(p){
 platform = p;
 updateChart();
-}
+};
 
-function setRange(r){
+window.setRange = function(r){
 range = r;
 updateChart();
-}
+};
 
 updateChart();
+
+});
 </script>
 </body>
 </html>
