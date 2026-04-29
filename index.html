@@ -1,40 +1,127 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Chart Test</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  </head>
-  <body>
-<h1>Chart Test</h1>
-
-<!-- IMPORTANT: visible border so we KNOW it rendered -->
-<canvas id="myChart" style="border:1px solid red;"></canvas>
-
+<head>
+  <meta charset="UTF-8">
+  <title>FOX Local Retention Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial; background:#f8fafc; margin:40px; }
+    .controls button { margin:4px; padding:8px 12px; border-radius:8px; border:1px solid #ccc; cursor:pointer; }
+    button.active { background:#111; color:white; }
+    .cards { display:flex; gap:16px; margin:20px 0; }
+    .card { background:white; padding:16px; border-radius:12px; flex:1; }
+  </style>
+</head>
+<body>
+<h2>FOX Local 7-Day Return Rate Dashboard</h2>
+<div class="controls">
+  <b>Platform:</b>
+  <button onclick="setPlatform('combined')" id="btn-combined" class="active">Combined</button>
+  <button onclick="setPlatform('ios')" id="btn-ios">iOS</button>
+  <button onclick="setPlatform('android')" id="btn-android">Android</button>
+  <button onclick="setPlatform('all')" id="btn-all">All</button>
+</div>
+<div class="controls">
+  <b>Range:</b>
+  <button onclick="setRange(4)">Last 4</button>
+  <button onclick="setRange(8)">Last 8</button>
+  <button onclick="setRange(12)">Last 12</button>
+  <button onclick="setRange('all')">All</button>
+</div>
+<div class="cards">
+  <div class="card">Latest: <span id="latest"></span></div>
+  <div class="card">Peak: <span id="peak"></span></div>
+  <div class="card">Average: <span id="avg"></span></div>
+</div>
 <script>
-  window.onload = function () {
-    console.log("Page loaded");
+window.onload = function () {
 
-    const canvas = document.getElementById("myChart");
-    console.log("Canvas:", canvas);
+const labels = ["Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23","Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"];
 
-    if (!canvas) {
-      document.body.innerHTML += "<p style='color:red'>Canvas missing</p>";
-      return;
-    }
+const data = {
+  combined:[32.56,34.73,47.92,40.32,31.98,34.38,35.48,36.53,35.54,33.98,35.56,35.00,35.02,36.51,48.80,37.94],
+  ios:[37.39,38.40,50.71,43.97,37.28,41.68,39.92,40.06,41.01,39.35,42.08,37.77,37.60,39.62,52.73,42.56],
+  android:[27.94,30.18,43.16,35.02,27.49,27.93,30.94,32.37,30.44,29.34,29.45,31.38,31.98,33.47,44.70,33.91]
+};
 
-    const ctx = canvas.getContext("2d");
+let platform = "combined";
+let range = "all";
 
-    new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: ["A", "B", "C"],
-        datasets: [{
-          label: "Test",
-          data: [10, 20, 30]
-        }]
+const ctx = document.getElementById("chartCanvas").getContext("2d");
+
+const chart = new Chart(ctx, {
+  type: "line",
+  data: { labels: [], datasets: [] },
+  options: {
+    responsive: true,
+    interaction: { mode: "index", intersect: false },
+    scales: {
+      y: {
+        min: 20,
+        max: 55,
+        ticks: { callback: v => v + "%" }
       }
-    });
+    }
+  }
+});
+
+function getFiltered() {
+  let start = 0;
+  if (range !== "all") start = labels.length - range;
+
+  return {
+    labels: labels.slice(start),
+    combined: data.combined.slice(start),
+    ios: data.ios.slice(start),
+    android: data.android.slice(start)
   };
-</script>  </body>
+}
+
+function updateMetrics(f) {
+  const series = f[platform === "all" ? "combined" : platform];
+  document.getElementById("latest").innerText = series.at(-1).toFixed(2) + "%";
+  document.getElementById("peak").innerText = Math.max(...series).toFixed(2) + "%";
+  document.getElementById("avg").innerText = (series.reduce((a,b)=>a+b,0)/series.length).toFixed(2) + "%";
+}
+
+function updateChart() {
+  const f = getFiltered();
+  let datasets = [];
+
+  if (platform === "combined" || platform === "all") {
+    datasets.push({ label:"Combined", data:f.combined, borderWidth:3 });
+  }
+  if (platform === "ios" || platform === "all") {
+    datasets.push({ label:"iOS", data:f.ios, borderWidth:3 });
+  }
+  if (platform === "android" || platform === "all") {
+    datasets.push({ label:"Android", data:f.android, borderWidth:3 });
+  }
+
+  chart.data.labels = f.labels;
+  chart.data.datasets = datasets;
+  chart.update();
+
+  updateMetrics(f);
+}
+
+window.setPlatform = function(p) {
+  platform = p;
+
+  document.querySelectorAll("[id^=btn-]").forEach(b => b.classList.remove("active"));
+  document.getElementById("btn-" + p).classList.add("active");
+
+  updateChart();
+};
+
+window.setRange = function(r) {
+  range = r;
+  updateChart();
+};
+
+updateChart();
+
+};
+</script>
+</body>
 </html>
