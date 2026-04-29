@@ -1,82 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>FOX Local Retention Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-body { font-family: Arial; background:#f8fafc; margin:40px; }
-.container { max-width:1100px; margin:auto; }
-.controls button { margin:4px; padding:8px 12px; border-radius:8px; border:1px solid #ccc; cursor:pointer; }
-button.active { background:#111; color:white; }
-.cards { display:flex; gap:16px; margin:20px 0; }
-.card { background:white; padding:16px; border-radius:12px; flex:1; }
-canvas { background:white; padding:16px; border-radius:12px; }
-</style>
+  <title>FOX Retention</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-<div class="container">
-<h2>FOX Local 7-Day Return Rate Dashboard</h2>
-<div class="controls">
-<b>Platform:</b>
-<button onclick="setPlatform('combined')" class="active">Combined</button>
-<button onclick="setPlatform('ios')">iOS</button>
-<button onclick="setPlatform('android')">Android</button>
-<button onclick="setPlatform('all')">All</button>
-</div>
-<div class="controls">
-<b>Range:</b>
-<button onclick="setRange(4)">Last 4</button>
-<button onclick="setRange(8)">Last 8</button>
-<button onclick="setRange(12)">Last 12</button>
-<button onclick="setRange('all')" class="active">All</button>
-</div>
-<div class="cards">
-<div class="card"><div>Latest</div><div id="latest"></div></div>
-<div class="card"><div>Peak</div><div id="peak"></div></div>
-<div class="card"><div>Average</div><div id="avg"></div></div>
-</div>
-</div>
+<h2>FOX Local Retention</h2>
 <script>
 window.onload = function () {
 
-const ctx = document.getElementById('chartCanvas');
-if (!ctx) {
-  console.error("Canvas not found");
-  return;
-}
+  const canvas = document.getElementById("myChart");
 
-const labels = ["Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23","Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"];
+  if (!canvas) {
+    document.body.innerHTML += "<p>Canvas not found</p>";
+    return;
+  }
 
-const combined = [32.56,34.73,47.92,40.32,31.98,34.38,35.48,36.53,35.54,33.98,35.56,35.00,35.02,36.51,48.80,37.94];
-const ios = [37.39,38.40,50.71,43.97,37.28,41.68,39.92,40.06,41.01,39.35,42.08,37.77,37.60,39.62,52.73,42.56];
-const android = [27.94,30.18,43.16,35.02,27.49,27.93,30.94,32.37,30.44,29.34,29.45,31.38,31.98,33.47,44.70,33.91];
-
-const chart = new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: labels,
-    datasets: [
-      { label: 'Combined', data: combined, borderWidth: 3 },
-      { label: 'iOS', data: ios, borderWidth: 3 },
-      { label: 'Android', data: android, borderWidth: 3 }
-    ]
-  },
-  options: {
-    responsive: true,
-    scales: {
-      y: {
-        min: 20,
-        max: 55,
-        ticks: {
-          callback: v => v + "%"
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: ["Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23","Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"],
+      datasets: [
+        {
+          label: "Combined",
+          data: [32.56,34.73,47.92,40.32,31.98,34.38,35.48,36.53,35.54,33.98,35.56,35.00,35.02,36.51,48.80,37.94],
+          borderWidth: 3
+        }
+      ]
+    },
+    options: {
+      scales: {
+        y: {
+          min: 20,
+          max: 55,
+          ticks: {
+            callback: v => v + "%"
+          }
         }
       }
     }
-  }
-});
+  });
 
 };
 </script>
 </body>
 </html>
+
