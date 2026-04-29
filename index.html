@@ -32,33 +32,13 @@ canvas { background:white; padding:16px; border-radius:12px; }
 <button onclick="setRange('all')" class="active">All</button>
 </div>
 <div class="cards">
-<div class="card">
-<div>Latest</div>
-<div id="latest" style="font-size:22px;"></div>
-</div>
-<div class="card">
-<div>Peak</div>
-<div id="peak" style="font-size:22px;"></div>
-</div>
-<div class="card">
-<div>Average</div>
-<div id="avg" style="font-size:22px;"></div>
-</div>
-</div>
-<div style="margin-top:20px;">
-<b>Notes / Events:</b>
-<ul>
-<li>Jan 19 spike → likely campaign or onboarding change</li>
-<li>Apr 13 spike → investigate acquisition quality</li>
-<li>iOS consistently outperforming Android</li>
-</ul>
+<div class="card"><div>Latest</div><div id="latest"></div></div>
+<div class="card"><div>Peak</div><div id="peak"></div></div>
+<div class="card"><div>Average</div><div id="avg"></div></div>
 </div>
 </div>
 <script>
-const labels = [
-"Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23",
-"Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"
-];
+const labels = ["Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23","Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"];
 
 const data = {
 combined:[32.56,34.73,47.92,40.32,31.98,34.38,35.48,36.53,35.54,33.98,35.56,35.00,35.02,36.51,48.80,37.94],
@@ -69,61 +49,48 @@ android:[27.94,30.18,43.16,35.02,27.49,27.93,30.94,32.37,30.44,29.34,29.45,31.38
 let platform = "combined";
 let range = "all";
 
-const ctx = document.getElementById("chart");
+const ctx = document.getElementById('chart').getContext('2d');
 
-const chart = new Chart(ctx, {
-type:"line",
+let chart = new Chart(ctx, {
+type:'line',
 data:{ labels:[], datasets:[] },
 options:{
 responsive:true,
-interaction:{ mode:"index", intersect:false },
-plugins:{
-tooltip:{ callbacks:{
-label:(c)=>`${c.dataset.label}: ${c.parsed.y.toFixed(2)}%`
-}}
-},
-scales:{
-y:{ min:20, max:55, ticks:{ callback:v=>v+"%" } }
-}
+interaction:{ mode:'index', intersect:false },
+scales:{ y:{ min:20, max:55, ticks:{ callback:v=>v+'%' } } }
 }
 });
 
-function getFiltered() {
-let sliceStart = 0;
-if(range !== "all") sliceStart = labels.length - range;
-
+function getFiltered(){
+let start = 0;
+if(range !== "all") start = labels.length - range;
 return {
-labels: labels.slice(sliceStart),
-combined: data.combined.slice(sliceStart),
-ios: data.ios.slice(sliceStart),
-android: data.android.slice(sliceStart)
+labels: labels.slice(start),
+combined: data.combined.slice(start),
+ios: data.ios.slice(start),
+android: data.android.slice(start)
 };
 }
 
-function updateMetrics(filtered) {
-let series = filtered[platform === "all" ? "combined" : platform];
-
-let latest = series[series.length - 1];
-let peak = Math.max(...series);
-let avg = series.reduce((a,b)=>a+b,0)/series.length;
-
-document.getElementById("latest").innerText = latest.toFixed(2) + "%";
-document.getElementById("peak").innerText = peak.toFixed(2) + "%";
-document.getElementById("avg").innerText = avg.toFixed(2) + "%";
+function updateMetrics(f){
+let s = f[platform === 'all' ? 'combined' : platform];
+document.getElementById('latest').innerText = s[s.length-1].toFixed(2)+'%';
+document.getElementById('peak').innerText = Math.max(...s).toFixed(2)+'%';
+document.getElementById('avg').innerText = (s.reduce((a,b)=>a+b,0)/s.length).toFixed(2)+'%';
 }
 
-function updateChart() {
+function updateChart(){
 let f = getFiltered();
 let datasets = [];
 
-if(platform==="combined"||platform==="all"){
-datasets.push({label:"Combined", data:f.combined, borderWidth:3, tension:0.3});
+if(platform==='combined'||platform==='all'){
+datasets.push({label:'Combined', data:f.combined, borderWidth:3});
 }
-if(platform==="ios"||platform==="all"){
-datasets.push({label:"iOS", data:f.ios, borderWidth:3, tension:0.3});
+if(platform==='ios'||platform==='all'){
+datasets.push({label:'iOS', data:f.ios, borderWidth:3});
 }
-if(platform==="android"||platform==="all"){
-datasets.push({label:"Android", data:f.android, borderWidth:3, tension:0.3});
+if(platform==='android'||platform==='all'){
+datasets.push({label:'Android', data:f.android, borderWidth:3});
 }
 
 chart.data.labels = f.labels;
@@ -135,8 +102,6 @@ updateMetrics(f);
 
 function setPlatform(p){
 platform = p;
-document.querySelectorAll(".controls button").forEach(b=>b.classList.remove("active"));
-event.target.classList.add("active");
 updateChart();
 }
 
@@ -149,4 +114,3 @@ updateChart();
 </script>
 </body>
 </html>
-
