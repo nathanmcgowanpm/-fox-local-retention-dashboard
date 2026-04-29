@@ -1,127 +1,203 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>FOX Local Retention Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FOX Local 7-Day Return Rate</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial; background:#f8fafc; margin:40px; }
-    .controls button { margin:4px; padding:8px 12px; border-radius:8px; border:1px solid #ccc; cursor:pointer; }
-    button.active { background:#111; color:white; }
-    .cards { display:flex; gap:16px; margin:20px 0; }
-    .card { background:white; padding:16px; border-radius:12px; flex:1; }
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      line-height: 1.15;
+    }
+    .sub {
+      color: var(--muted);
+      margin: 0 0 20px;
+      font-size: 16px;
+    }
+    .tip {
+      color: var(--muted);
+      margin: 0 0 20px;
+      font-size: 14px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+    .label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .notes {
+      margin-top: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .notes h2 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .notes ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .notes li { margin: 8px 0; }
+    canvas { width: 100%; height: 460px; }
+    @media (max-width: 760px) {
+      .cards { grid-template-columns: 1fr; }
+      h1 { font-size: 28px; }
+      canvas { height: 380px; }
+    }
   </style>
 </head>
 <body>
-<h2>FOX Local 7-Day Return Rate Dashboard</h2>
-<div class="controls">
-  <b>Platform:</b>
-  <button onclick="setPlatform('combined')" id="btn-combined" class="active">Combined</button>
-  <button onclick="setPlatform('ios')" id="btn-ios">iOS</button>
-  <button onclick="setPlatform('android')" id="btn-android">Android</button>
-  <button onclick="setPlatform('all')" id="btn-all">All</button>
-</div>
-<div class="controls">
-  <b>Range:</b>
-  <button onclick="setRange(4)">Last 4</button>
-  <button onclick="setRange(8)">Last 8</button>
-  <button onclick="setRange(12)">Last 12</button>
-  <button onclick="setRange('all')">All</button>
-</div>
-<div class="cards">
-  <div class="card">Latest: <span id="latest"></span></div>
-  <div class="card">Peak: <span id="peak"></span></div>
-  <div class="card">Average: <span id="avg"></span></div>
-</div>
-<script>
-window.onload = function () {
+  <div class="wrap">
+    <h1>FOX Local 7-Day Return Rate</h1>
+    <p class="sub">Weekly cohorts of new users since January 2026.</p>
+    <p class="tip">Hover for exact values. Click items in the legend to show or hide a platform.</p>
 
-const labels = ["Jan 5","Jan 12","Jan 19","Jan 26","Feb 2","Feb 9","Feb 16","Feb 23","Mar 2","Mar 9","Mar 16","Mar 23","Mar 30","Apr 6","Apr 13","Apr 20"];
+    <div class="cards">
+      <div class="card">
+        <div class="label">Latest combined</div>
+        <div class="value" id="latestCombined">--</div>
+      </div>
+      <div class="card">
+        <div class="label">Peak combined</div>
+        <div class="value" id="peakCombined">--</div>
+      </div>
+      <div class="card">
+        <div class="label">Average combined</div>
+        <div class="value" id="avgCombined">--</div>
+      </div>
+    </div>
 
-const data = {
-  combined:[32.56,34.73,47.92,40.32,31.98,34.38,35.48,36.53,35.54,33.98,35.56,35.00,35.02,36.51,48.80,37.94],
-  ios:[37.39,38.40,50.71,43.97,37.28,41.68,39.92,40.06,41.01,39.35,42.08,37.77,37.60,39.62,52.73,42.56],
-  android:[27.94,30.18,43.16,35.02,27.49,27.93,30.94,32.37,30.44,29.34,29.45,31.38,31.98,33.47,44.70,33.91]
-};
+    <div class="panel">
+      <canvas id="retentionChart"></canvas>
+    </div>
 
-let platform = "combined";
-let range = "all";
+    <div class="notes">
+      <h2>Notes</h2>
+      <ul>
+        <li>Combined return rate peaks on Jan 19 and Apr 13.</li>
+        <li>iOS consistently runs above Android across the period shown.</li>
+        <li>This version favors reliability over custom controls. Use the legend to compare platforms.</li>
+      </ul>
+    </div>
+  </div>
 
-const ctx = document.getElementById("chartCanvas").getContext("2d");
+  <script>
+    const labels = [
+      'Jan 5','Jan 12','Jan 19','Jan 26',
+      'Feb 2','Feb 9','Feb 16','Feb 23',
+      'Mar 2','Mar 9','Mar 16','Mar 23',
+      'Mar 30','Apr 6','Apr 13','Apr 20'
+    ];
 
-const chart = new Chart(ctx, {
-  type: "line",
-  data: { labels: [], datasets: [] },
-  options: {
-    responsive: true,
-    interaction: { mode: "index", intersect: false },
-    scales: {
-      y: {
-        min: 20,
-        max: 55,
-        ticks: { callback: v => v + "%" }
+    const combined = [32.56,34.73,47.92,40.32,31.98,34.38,35.48,36.53,35.54,33.98,35.56,35.00,35.02,36.51,48.80,37.94];
+    const ios = [37.39,38.40,50.71,43.97,37.28,41.68,39.92,40.06,41.01,39.35,42.08,37.77,37.60,39.62,52.73,42.56];
+    const android = [27.94,30.18,43.16,35.02,27.49,27.93,30.94,32.37,30.44,29.34,29.45,31.38,31.98,33.47,44.70,33.91];
+
+    const pct = (n) => `${n.toFixed(2)}%`;
+    const avg = combined.reduce((a, b) => a + b, 0) / combined.length;
+    const peak = Math.max(...combined);
+    const latest = combined[combined.length - 1];
+
+    document.getElementById('latestCombined').textContent = pct(latest);
+    document.getElementById('peakCombined').textContent = pct(peak);
+    document.getElementById('avgCombined').textContent = pct(avg);
+
+    const ctx = document.getElementById('retentionChart');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Combined',
+            data: combined,
+            borderWidth: 3,
+            tension: 0.25
+          },
+          {
+            label: 'iOS',
+            data: ios,
+            borderWidth: 3,
+            tension: 0.25
+          },
+          {
+            label: 'Android',
+            data: android,
+            borderWidth: 3,
+            tension: 0.25
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false
+        },
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (context) => `${context.dataset.label}: ${pct(context.parsed.y)}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 20,
+            max: 55,
+            ticks: {
+              callback: (value) => `${value}%`
+            }
+          }
+        }
       }
-    }
-  }
-});
-
-function getFiltered() {
-  let start = 0;
-  if (range !== "all") start = labels.length - range;
-
-  return {
-    labels: labels.slice(start),
-    combined: data.combined.slice(start),
-    ios: data.ios.slice(start),
-    android: data.android.slice(start)
-  };
-}
-
-function updateMetrics(f) {
-  const series = f[platform === "all" ? "combined" : platform];
-  document.getElementById("latest").innerText = series.at(-1).toFixed(2) + "%";
-  document.getElementById("peak").innerText = Math.max(...series).toFixed(2) + "%";
-  document.getElementById("avg").innerText = (series.reduce((a,b)=>a+b,0)/series.length).toFixed(2) + "%";
-}
-
-function updateChart() {
-  const f = getFiltered();
-  let datasets = [];
-
-  if (platform === "combined" || platform === "all") {
-    datasets.push({ label:"Combined", data:f.combined, borderWidth:3 });
-  }
-  if (platform === "ios" || platform === "all") {
-    datasets.push({ label:"iOS", data:f.ios, borderWidth:3 });
-  }
-  if (platform === "android" || platform === "all") {
-    datasets.push({ label:"Android", data:f.android, borderWidth:3 });
-  }
-
-  chart.data.labels = f.labels;
-  chart.data.datasets = datasets;
-  chart.update();
-
-  updateMetrics(f);
-}
-
-window.setPlatform = function(p) {
-  platform = p;
-
-  document.querySelectorAll("[id^=btn-]").forEach(b => b.classList.remove("active"));
-  document.getElementById("btn-" + p).classList.add("active");
-
-  updateChart();
-};
-
-window.setRange = function(r) {
-  range = r;
-  updateChart();
-};
-
-updateChart();
-
-};
-</script>
+    });
+  </script>
 </body>
 </html>
