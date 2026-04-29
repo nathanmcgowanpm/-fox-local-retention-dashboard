@@ -1,31 +1,40 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Test Chart</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8">
+    <title>Chart Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
 <h1>Chart Test</h1>
+
+<!-- IMPORTANT: visible border so we KNOW it rendered -->
+<canvas id="myChart" style="border:1px solid red;"></canvas>
+
 <script>
-window.onload = function () {
-  console.log("Page loaded");
+  window.onload = function () {
+    console.log("Page loaded");
 
-  var canvas = document.getElementById("myChart");
-  console.log("Canvas:", canvas);
+    const canvas = document.getElementById("myChart");
+    console.log("Canvas:", canvas);
 
-  var ctx = canvas.getContext("2d");
-
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: ["A", "B", "C"],
-      datasets: [{
-        label: "Test",
-        data: [10, 20, 30]
-      }]
+    if (!canvas) {
+      document.body.innerHTML += "<p style='color:red'>Canvas missing</p>";
+      return;
     }
-  });
-};
-</script>
-</body>
+
+    const ctx = canvas.getContext("2d");
+
+    new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: ["A", "B", "C"],
+        datasets: [{
+          label: "Test",
+          data: [10, 20, 30]
+        }]
+      }
+    });
+  };
+</script>  </body>
 </html>
